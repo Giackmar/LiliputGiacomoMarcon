@@ -1,7 +1,47 @@
 char caratteri[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '.'};
-String codiceCaratteri[] = {".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..","--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--..", ".-.-.-"};
+String codiceCaratteri[] = {".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--..", ".-.-.-"};
 
 #define LED 13
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+typedef struct nodo
+{
+  char carattere;
+  struct nodo* next;
+}Lista;
+
+Lista* lista = NULL;
+
+Lista* inserisciInCoda(Lista* n, Lista* l)
+{
+  if (l == NULL)
+  {
+    return n;
+  }
+  else
+  {
+    l->next = inserisciInCoda(n, l->next);
+    return l;
+  }
+}
+
+Lista* creaNodo(char c)
+{
+  Lista* n = (Lista*)malloc(sizeof(Lista));
+  n->carattere = c;
+  n->next = NULL;
+  return n;
+}
+
+void creaLista(String testo)
+{
+  for (int i = 0; i < testo.length(); i++)
+  {
+    lista = inserisciInCoda(creaNodo(testo[i]), lista);
+  }
+}
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 
 void setup() {
   Serial.begin(9600);
@@ -58,6 +98,17 @@ void SendChar(char carattere)
   delay(200);//attendo
 }
 
+void stampaLista(Lista* l)
+{
+  if(l!=NULL)
+  {
+    Serial.print(l->carattere);
+    stampaLista(l->next);
+  }
+  l->carattere = NULL;
+}
+
+
 void loop() {
   if (Serial.available() > 0)
   {
@@ -78,15 +129,17 @@ void loop() {
     }
     if (testo.length() > 0)
     {
-      Serial.print("Hai inviato: ");
       for (int i = 0; i < testo.length(); i++)
       {
         SendChar(testo[i]);
-        Serial.print(testo[i]);
+        lista = inserisciInCoda(creaNodo(testo[i]), lista);
       }
       SendChar('.');
-      Serial.print(".");
+      testo += ".";
+      lista = inserisciInCoda(creaNodo('.'), lista);
+      Serial.print("Hai inviato: ");
+      stampaLista(lista);
+      Serial.println();
     }
-    Serial.println();
   }
 }
