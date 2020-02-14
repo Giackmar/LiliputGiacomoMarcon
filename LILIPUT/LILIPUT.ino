@@ -3,7 +3,8 @@ String codiceCaratteri[] = {".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "..
 int LED = 13;
 
 
-//----------------------METODI LISTA INIZIO------------------------------------------------
+
+//----------------------METODI LISTA INIZIO--------------------------------------------------------------------------------------
 
 typedef struct nodo { //creo il tipo Lista [carattere-->char & next-->puntatore a nodo]
   char carattere;
@@ -40,12 +41,13 @@ void stampaLista(Lista* l) { //data in input una lista stampa il contenuto su se
   l->carattere = NULL;
 }
 
-//----------------------METODI LISTA FINE--------------------------------------------------
+//----------------------METODI LISTA FINE----------------------------------------------------------------------------------------
 
 
-//----------------------METODI MORSE INIZIO------------------------------------------------
 
-bool CharIsOK(char carattere) { //restituisce true se il charater in input è accettabile (se è presente nell'array caratteri)
+//------------------METODI TRADUZIONE CHAR TO MORSE INIZIO-----------------------------------------------------------------------
+
+bool charIsOK(char carattere) { //restituisce true se il charater in input è accettabile (se è presente nell'array caratteri)
   bool ok = false;
   for (int i = 0; i < 26; i++)
   {
@@ -57,7 +59,7 @@ bool CharIsOK(char carattere) { //restituisce true se il charater in input è ac
   return ok;
 }
 
-String CharToMorse(char carattere) { //restituisce il codice morse del carattere dato in input
+String charToMorse(char carattere) { //restituisce il codice morse del carattere dato in input
   int i = 0;
   while (carattere != caratteri[i])
   {
@@ -66,9 +68,59 @@ String CharToMorse(char carattere) { //restituisce il codice morse del carattere
   return codiceCaratteri[i];
 }
 
+String controlloTesto(String input) { //ritorno una stringa con caratteri "accettabili" (A,B,C,D,..) tutti maiuscoli
+  input.toUpperCase();
+  String testo = "";
+  bool noPunto = true;
+
+  //estraggo da input solo i caratteri accettabili e precendenti il punto
+  for (int i = 0; i < input.length(); i++)
+  {
+    if (charIsOK(input[i]) && noPunto)
+    {
+      testo += input[i];
+    }
+    if (input[i] == '.')
+    {
+      noPunto = false;
+    }
+  }
+  return testo;
+}
+
+//------------------METODI TRADUZIONE CHAR TO MORSE FINE--------------------------------------------------------------------------
+
+
+
+//----------------------------METODI INVIO INIZIO---------------------------------------------------------------------------------
+
+void trasmissione(String input) { //ottengo il testo che posso inviare e quindi lo invio
+  String testo = controlloTesto(input);
+  invioTesto(testo);
+}
+
+void invioTesto(String testoDaInviare) { //spedisco in codice morse il testo ricevuto in input
+  if (testoDaInviare.length() > 0)
+  {
+    for (int i = 0; i < testoDaInviare.length(); i++) //per ogni carattere da inviare:
+    {
+      SendChar(testoDaInviare[i]);                                         //lo invio
+      lista = inserisciInCoda(creaNodo(testoDaInviare[i]), lista);         //lo inserisco nella lista
+    }
+
+    //una volta spedito tutto il testo spedisco il punto(END-CHAR) e lo aggiungo alla lista
+    SendChar('.');
+    lista = inserisciInCoda(creaNodo('.'), lista);
+
+    //stampo su seriale la lista
+    Serial.print("Hai inviato: ");
+    stampaLista(lista);
+    Serial.println();
+  }
+}
 
 void SendChar(char carattere) { //invia il codice morse del carattere ricevuto in input con trasmissione luminosa
-  String codeMorse = CharToMorse(carattere);
+  String codeMorse = charToMorse(carattere);
   for (int i = 0; i < codeMorse.length(); i++)
   {
     if (codeMorse[i] == '.') //punto --> 0.5s ON
@@ -93,6 +145,10 @@ void SendChar(char carattere) { //invia il codice morse del carattere ricevuto i
   delay(200);//attendo
 }
 
+//----------------------------METODI INVIO FINE-----------------------------------------------------------------------------------
+
+
+
 void setup() {
   Serial.begin(9600);
   pinMode(LED, OUTPUT);
@@ -103,50 +159,5 @@ void loop() {
   if (Serial.available() > 0) //attendo che venga dato un input da seriale
   {
     trasmissione(Serial.readString());
-  }
-}
-
-void trasmissione(String input) { //ottengo il testo che posso inviare e quindi lo invio
-  String testo = controlloTesto(input);
-  invioTesto(testo);
-}
-
-String controlloTesto(String input) { //ritorno una stringa con caratteri "accettabili" (A,B,C,D,..) tutti maiuscoli
-  input.toUpperCase();
-  String testo = "";
-  bool noPunto = true;
-
-  //estraggo da input solo i caratteri accettabili e precendenti il punto
-  for (int i = 0; i < input.length(); i++)
-  {
-    if (CharIsOK(input[i]) && noPunto)
-    {
-      testo += input[i];
-    }
-    if (input[i] == '.')
-    {
-      noPunto = false;
-    }
-  }
-  return testo;
-}
-
-void invioTesto(String testoDaInviare) { //spedisco in codice morse il testo ricevuto in input
-  if (testoDaInviare.length() > 0)
-  {
-    for (int i = 0; i < testoDaInviare.length(); i++) //per ogni carattere da inviare:
-    {
-      SendChar(testoDaInviare[i]);                                         //lo invio
-      lista = inserisciInCoda(creaNodo(testoDaInviare[i]), lista);         //lo inserisco nella lista
-    }
-
-    //una volta spedito tutto il testo spedisco il punto(END-CHAR) e lo aggiungo alla lista
-    SendChar('.');
-    lista = inserisciInCoda(creaNodo('.'), lista);
-
-    //stampo su seriale la lista
-    Serial.print("Hai inviato: ");
-    stampaLista(lista);
-    Serial.println();
   }
 }
