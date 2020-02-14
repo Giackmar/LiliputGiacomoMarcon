@@ -3,7 +3,7 @@ String codiceCaratteri[] = {".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "..
 
 #define LED 13
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
 typedef struct nodo
 {
   char carattere;
@@ -40,15 +40,24 @@ void creaLista(String testo)
     lista = inserisciInCoda(creaNodo(testo[i]), lista);
   }
 }
-//------------------------------------------------------------------------------------------------------------------------------------------
 
-
+void stampaLista(Lista* l)
+{
+  if(l!=NULL)
+  {
+    Serial.print(l->carattere);
+    stampaLista(l->next);
+  }
+  l->carattere = NULL;
+}
+//--------------------------------------------------------------------------------------------------
 void setup() {
   Serial.begin(9600);
   pinMode(LED, OUTPUT);
 }
 
-bool CharIsOK(char carattere)//controlla se il charater in input è accettabile
+
+bool CharIsOK(char carattere)//controlla se il charater in input è accettabile(se è presente nell'array caratteri
 {
   bool ok = false;
   for (int i = 0; i < 26; i++)
@@ -61,6 +70,7 @@ bool CharIsOK(char carattere)//controlla se il charater in input è accettabile
   return ok;
 }
 
+
 String CharToMorse(char carattere)//dato il charater mi restituisce il corrispondente in codice morse
 {
   int i = 0;
@@ -71,7 +81,8 @@ String CharToMorse(char carattere)//dato il charater mi restituisce il corrispon
   return codiceCaratteri[i];
 }
 
-void SendChar(char carattere)
+
+void SendChar(char carattere)//riceve
 {
   String codeMorse = CharToMorse(carattere);
   for (int i = 0; i < codeMorse.length(); i++)
@@ -96,16 +107,6 @@ void SendChar(char carattere)
   delay(2000);
   digitalWrite(LED, LOW);
   delay(200);//attendo
-}
-
-void stampaLista(Lista* l)
-{
-  if(l!=NULL)
-  {
-    Serial.print(l->carattere);
-    stampaLista(l->next);
-  }
-  l->carattere = NULL;
 }
 
 
